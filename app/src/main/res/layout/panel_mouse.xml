@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 虚拟鼠标面板：开关 + 光标大小（内容可能比屏幕高，所以套一层 ScrollView） -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_mouse_title"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/mouse_hint"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <RadioGroup
+            android:id="@+id/mouse_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/mouse_off"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/mouse_off"
+                android:textColor="#212121"
+                android:textSize="15sp" />
+
+            <RadioButton
+                android:id="@+id/mouse_on"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/mouse_on"
+                android:textColor="#212121"
+                android:textSize="15sp" />
+
+        </RadioGroup>
+
+        <!-- ==================== 快捷控制 ==================== -->
+
+        <CheckBox
+            android:id="@+id/mouse_quick_toggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:minHeight="48dp"
+            android:text="@string/mouse_quick_toggle"
+            android:textColor="#212121"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/mouse_quick_toggle_hint"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <!-- ==================== 光标大小 ==================== -->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/cursor_size_title"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/mouse_size_percent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textColor="#FB7299"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            tools:text="100%（默认）" />
+
+        <SeekBar
+            android:id="@+id/mouse_size_seek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:max="150"
+            android:progress="50" />
+
+    </LinearLayout>
+
+</ScrollView>

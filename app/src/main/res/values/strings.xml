@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 默认语言（中文）。英文见 values-en/strings.xml -->
+<resources>
+    <string name="app_name">biliweb</string>
+
+    <!-- 悬浮球 -->
+    <string name="float_ball_desc">设置</string>
+    <string name="float_ball_mouse_on">开</string>
+
+    <!-- 设置页 -->
+    <string name="settings_title">设置</string>
+    <string name="back">返回</string>
+    <string name="chevron">›</string>
+
+    <!-- 语言 -->
+    <string name="settings_language_title">语言</string>
+    <string name="language_follow_system">跟随系统</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_english">English</string>
+    <string name="language_hint">切换界面语言。</string>
+
+    <!-- 缩放 -->
+    <string name="settings_zoom_title">缩放</string>
+    <string name="zoom_percent">%1$d%%</string>
+    <string name="zoom_percent_default">%1$d%%（默认）</string>
+    <string name="zoom_minus">-</string>
+    <string name="zoom_plus">+</string>
+    <string name="settings_preview_title">预览</string>
+    <string name="settings_preview_hint">调整缩放后，下方示例网页的文字、图片与布局将同步变化，可作为缩放比例的参考。</string>
+    <string name="settings_preview_error">预览内容加载失败</string>
+
+    <!-- 关于 / 检查更新 -->
+    <string name="settings_about_title">关于</string>
+    <string name="about_version">版本 %1$s</string>
+    <string name="about_desc">为无法安装新版哔哩哔哩客户端、但可以更新系统 WebView、又想体验完整功能的人而设计。</string>
+    <string name="about_github">GitHub：github.com/xiaoyumi9243/biliweb</string>
+    <string name="about_github_url" translatable="false">https://github.com/xiaoyumi9243/biliweb</string>
+    <string name="about_check_update">检查更新</string>
+    <string name="about_checking">正在检查更新…</string>
+    <string name="about_up_to_date">当前已是最新版本</string>
+    <string name="about_check_failed_reason">检查失败：%1$s</string>
+    <string name="about_check_failed_unknown">未知原因</string>
+    <string name="update_title">发现新版本</string>
+    <string name="update_message">最新版本：%1$s\n当前版本：%2$s</string>
+    <string name="update_download">立即下载</string>
+    <string name="update_changelog">查看更新日志</string>
+    <string name="update_changelog_title">更新日志</string>
+    <string name="update_later">稍后</string>
+    <string name="about_close">关闭</string>
+    <string name="about_no_browser">未找到可用的浏览器</string>
+
+    <!-- 检查更新的失败原因 -->
+    <string name="update_fail_separator">；</string>
+    <string name="update_fail_timeout">连接超时</string>
+    <string name="update_fail_dns">域名解析失败</string>
+    <string name="update_fail_tls">HTTPS 证书错误</string>
+    <string name="update_fail_network">网络错误</string>
+    <string name="update_fail_http">服务器返回状态码 %1$d</string>
+    <string name="update_fail_not_json">返回内容不是有效 JSON</string>
+    <string name="update_fail_webview_timeout">请求超时（直连结果：%1$s）</string>
+    <string name="update_fail_not_json_direct">返回内容不是有效 JSON（直连结果：%1$s）</string>
+
+    <!-- 悬浮球设置 -->
+    <string name="settings_float_ball_title">悬浮球</string>
+    <string name="float_ball_size_title">悬浮球大小</string>
+    <string name="float_ball_opacity_title">不透明度</string>
+    <string name="float_ball_percent">%1$d%%</string>
+    <string name="float_ball_percent_default">%1$d%%（默认）</string>
+    <string name="float_ball_summary">%1$d%% · %2$d%%</string>
+
+    <!-- 虚拟鼠标 -->
+    <string name="settings_mouse_title">虚拟鼠标</string>
+    <string name="mouse_hint">启用后，整个页面将作为触控板使用：单指拖动移动指针，轻点等同左键，长按等同右键，双指拖动滚动页面。\n启用期间网页不再响应直接触摸，悬浮球仍可正常使用。</string>
+    <string name="mouse_off">关闭（默认）</string>
+    <string name="mouse_on">开启</string>
+    <string name="mouse_off_short">关闭</string>
+    <string name="mouse_on_short">开启</string>
+    <string name="mouse_quick_toggle">长按悬浮球快捷开关</string>
+    <string name="mouse_quick_toggle_hint">启用后，长按悬浮球即可开启或关闭虚拟鼠标；开启期间悬浮球图标切换为鼠标指针，并在右下角显示「开」标记。单击悬浮球仍为进入设置。</string>
+    <string name="mouse_toggled_on">虚拟鼠标已开启</string>
+    <string name="mouse_toggled_off">虚拟鼠标已关闭</string>
+    <string name="cursor_size_title">光标大小</string>
+    <string name="cursor_size_percent">%1$d%%</string>
+    <string name="cursor_size_default">%1$d%%（默认）</string>
+
+    <!-- 屏幕方向 -->
+    <string name="settings_orientation_title">屏幕方向</string>
+    <string name="orientation_hint">应用启动时使用的屏幕方向</string>
+    <string name="orientation_default">默认（竖屏启动，允许自由旋转）</string>
+    <string name="orientation_landscape">锁定横屏（禁止旋转）</string>
+    <string name="orientation_default_short">默认</string>
+    <string name="orientation_landscape_short">锁定横屏</string>
+</resources>

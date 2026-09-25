@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 这个 FrameLayout 不能换成 merge：它带 id，运行时还要在上面设置 padding（沉浸式避让） -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="MergeRootFrame">
+
+    <!-- 页面栈容器：每打开一个页面就往这里加一个 WebView，旧页面留在里面不销毁 -->
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- 顶部加载进度条（默认只在首次打开时显示） -->
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_gravity="top"
+        android:max="100"
+        android:progress="0"
+        android:visibility="gone" />
+
+    <!-- 悬浮球：原生控件，浮在网页之上（不是网页内容）。
+         平时是设置齿轮；虚拟鼠标开着时换成鼠标指针图标，右下角带一个「开」角标。
+         位置由 MainActivity 用 setX/setY 拖动，这里只给初始位置（右侧居中）。 -->
+    <FrameLayout
+        android:id="@+id/float_ball"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/bg_float_ball"
+        android:contentDescription="@string/float_ball_desc"
+        android:elevation="6dp">
+
+        <ImageView
+            android:id="@+id/float_ball_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:padding="12dp"
+            android:src="@drawable/ic_settings" />
+
+        <TextView
+            android:id="@+id/float_ball_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:background="@drawable/bg_float_ball_badge"
+            android:gravity="center"
+            android:minWidth="16dp"
+            android:minHeight="16dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:text="@string/float_ball_mouse_on"
+            android:textColor="@android:color/white"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+</FrameLayout>

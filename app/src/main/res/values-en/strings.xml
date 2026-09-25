@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English. Chinese (default) lives in values/strings.xml -->
+<resources>
+    <string name="app_name">biliweb</string>
+
+    <!-- Floating ball -->
+    <string name="float_ball_desc">Settings</string>
+    <string name="float_ball_mouse_on">ON</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="back">Back</string>
+    <string name="chevron">›</string>
+
+    <!-- Language -->
+    <string name="settings_language_title">Language</string>
+    <string name="language_follow_system">Follow system</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_english">English</string>
+    <string name="language_hint">Switch the interface language.</string>
+
+    <!-- Zoom -->
+    <string name="settings_zoom_title">Zoom</string>
+    <string name="zoom_percent">%1$d%%</string>
+    <string name="zoom_percent_default">%1$d%% (default)</string>
+    <string name="zoom_minus">-</string>
+    <string name="zoom_plus">+</string>
+    <string name="settings_preview_title">Preview</string>
+    <string name="settings_preview_hint">After the zoom is adjusted, the text, images and layout of the sample page below change accordingly and can serve as a reference for the zoom level.</string>
+    <string name="settings_preview_error">Failed to load the preview content</string>
+
+    <!-- About / update check -->
+    <string name="settings_about_title">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_desc">Designed for users who cannot install the latest Bilibili app but can update the system WebView, and still want the full experience.</string>
+    <string name="about_github">GitHub: github.com/xiaoyumi9243/biliweb</string>
+    <string name="about_github_url" translatable="false">https://github.com/xiaoyumi9243/biliweb</string>
+    <string name="about_check_update">Check for updates</string>
+    <string name="about_checking">Checking for updates…</string>
+    <string name="about_up_to_date">The current version is up to date</string>
+    <string name="about_check_failed_reason">Check failed: %1$s</string>
+    <string name="about_check_failed_unknown">unknown reason</string>
+    <string name="update_title">New version available</string>
+    <string name="update_message">Latest version: %1$s\nCurrent version: %2$s</string>
+    <string name="update_download">Download now</string>
+    <string name="update_changelog">View changelog</string>
+    <string name="update_changelog_title">Changelog</string>
+    <string name="update_later">Later</string>
+    <string name="about_close">Close</string>
+    <string name="about_no_browser">No browser is available</string>
+
+    <!-- Update check failure reasons -->
+    <string name="update_fail_separator">"; "</string>
+    <string name="update_fail_timeout">connection timed out</string>
+    <string name="update_fail_dns">DNS resolution failed</string>
+    <string name="update_fail_tls">HTTPS certificate error</string>
+    <string name="update_fail_network">network error</string>
+    <string name="update_fail_http">server returned status code %1$d</string>
+    <string name="update_fail_not_json">the response is not valid JSON</string>
+    <string name="update_fail_webview_timeout">request timed out (direct connection result: %1$s)</string>
+    <string name="update_fail_not_json_direct">the response is not valid JSON (direct connection result: %1$s)</string>
+
+    <!-- Floating ball -->
+    <string name="settings_float_ball_title">Floating ball</string>
+    <string name="float_ball_size_title">Floating ball size</string>
+    <string name="float_ball_opacity_title">Opacity</string>
+    <string name="float_ball_percent">%1$d%%</string>
+    <string name="float_ball_percent_default">%1$d%% (default)</string>
+    <string name="float_ball_summary">%1$d%% · %2$d%%</string>
+
+    <!-- Virtual mouse -->
+    <string name="settings_mouse_title">Virtual mouse</string>
+    <string name="mouse_hint">When enabled, the whole page is used as a trackpad: drag with one finger to move the pointer, tap for a left click, long press for a right click, and drag with two fingers to scroll.\nWhile enabled, the page no longer responds to direct touches; the floating ball remains available.</string>
+    <string name="mouse_off">Off (default)</string>
+    <string name="mouse_on">On</string>
+    <string name="mouse_off_short">Off</string>
+    <string name="mouse_on_short">On</string>
+    <string name="mouse_quick_toggle">Long press the floating ball to toggle</string>
+    <string name="mouse_quick_toggle_hint">When enabled, long press the floating ball to turn the virtual mouse on or off. While it is on, the floating ball icon changes to a mouse pointer with an ON marker in the bottom right corner. A single tap still opens Settings.</string>
+    <string name="mouse_toggled_on">Virtual mouse enabled</string>
+    <string name="mouse_toggled_off">Virtual mouse disabled</string>
+    <string name="cursor_size_title">Cursor size</string>
+    <string name="cursor_size_percent">%1$d%%</string>
+    <string name="cursor_size_default">%1$d%% (default)</string>
+
+    <!-- Screen orientation -->
+    <string name="settings_orientation_title">Screen orientation</string>
+    <string name="orientation_hint">The screen orientation used when the app starts</string>
+    <string name="orientation_default">Default (starts in portrait, free rotation allowed)</string>
+    <string name="orientation_landscape">Locked landscape (rotation disabled)</string>
+    <string name="orientation_default_short">Default</string>
+    <string name="orientation_landscape_short">Locked landscape</string>
+</resources>

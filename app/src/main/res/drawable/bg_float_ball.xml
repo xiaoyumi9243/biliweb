@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 悬浮球的外框：圆形，B 站粉底 + 一圈淡白描边 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#F0FB7299" />
+    <stroke
+        android:width="1dp"
+        android:color="#59FFFFFF" />
+</shape>

@@ -1,0 +1,40 @@
+apply plugin: 'com.android.application'
+
+// ==================== 版本号：改这里就够了 ====================
+def COMPILE_SDK = 37   // Android 17（API 37）
+def MIN_SDK     = 21   // Android 5.0，决定最低能装到哪个系统
+def TARGET_SDK  = 37   // 目标版本，跟 compileSdk 保持一致
+// ============================================================
+
+android {
+    // AGP 8 起包名在这里声明，不再写进 AndroidManifest.xml
+    namespace 'com.xiaoyumi.biliweb'
+    compileSdk COMPILE_SDK
+
+    defaultConfig {
+        applicationId "com.xiaoyumi.biliweb"
+        minSdk MIN_SDK
+        targetSdk TARGET_SDK
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // AGP 9 换成了新的 DSL 接口，为了这次能一次编译通过，
+            // 混淆规则先不挂（反正 minifyEnabled 是关的）。
+            // 以后要开混淆，加回这一行即可：
+            // proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // 故意留空：只用系统 WebView，不引入 AndroidX / 任何第三方库
+}

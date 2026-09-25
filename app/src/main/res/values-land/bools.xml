@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 横屏：双窗格（左边栏列表 + 右边内容） -->
+    <bool name="two_pane">true</bool>
+</resources>
