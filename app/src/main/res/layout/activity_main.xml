@@ -5,28 +5,56 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     tools:ignore="MergeRootFrame">
 
-    <!-- 页面栈容器：每打开一个页面就往这里加一个 WebView，旧页面留在里面不销毁 -->
-    <FrameLayout
-        android:id="@+id/container"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <!-- 顶部加载进度条（默认只在首次打开时显示） -->
-    <ProgressBar
-        android:id="@+id/progress"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:layout_gravity="top"
-        android:max="100"
-        android:progress="0"
-        android:visibility="gone" />
+        <!-- 顶部导航栏（外观 = 顶部导航栏时显示，见 AppearancePrefs） -->
+        <include layout="@layout/main_top_bar" />
+
+        <View
+            android:id="@+id/main_top_bar_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#1F000000"
+            android:visibility="gone" />
+
+        <!-- 网页区域：页面栈容器 + 进度条 + 虚拟鼠标浮层（运行时添加） -->
+        <FrameLayout
+            android:id="@+id/content_frame"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <!-- 页面栈容器：每打开一个页面就往这里加一个 WebView -->
+            <FrameLayout
+                android:id="@+id/container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <!-- 顶部加载进度条 -->
+            <ProgressBar
+                android:id="@+id/progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_gravity="top"
+                android:max="100"
+                android:progress="0"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </LinearLayout>
 
     <!-- 悬浮球：原生控件，浮在网页之上（不是网页内容）。
-         平时是设置齿轮；虚拟鼠标开着时换成鼠标指针图标，右下角带一个「开」角标。
-         位置由 MainActivity 用 setX/setY 拖动，这里只给初始位置（右侧居中）。 -->
+         外观 = 全屏时显示；外观 = 顶部导航栏时隐藏，设置入口移到顶栏。
+         平时是设置齿轮；虚拟鼠标开着时换成鼠标指针图标，右下角带一个「开」角标。 -->
     <FrameLayout
         android:id="@+id/float_ball"
         android:layout_width="48dp"

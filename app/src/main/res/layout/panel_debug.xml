@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 调试面板：WebView 测试入口 + 排查问题时用的实验性开关，默认全部关闭 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_debug_title"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/debug_hint"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <CheckBox
+            android:id="@+id/debug_no_multiprocess"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:minHeight="48dp"
+            android:text="@string/debug_no_multiprocess_title"
+            android:textColor="#212121"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/debug_no_multiprocess_hint"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <!-- ==================== WebView 测试 ==================== -->
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="#1F000000" />
+
+        <Button
+            android:id="@+id/debug_webview_test"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/debug_webview_test"
+            android:textAllCaps="false"
+            android:textColor="#FB7299"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/debug_webview_test_hint"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <!-- ==================== 自定义浏览器 UA ==================== -->
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="#1F000000" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/debug_ua_title"
+            android:textColor="#212121"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:lineSpacingExtra="3dp"
+            android:text="@string/debug_ua_hint"
+            android:textColor="#888888"
+            android:textSize="13sp" />
+
+        <RadioGroup
+            android:id="@+id/debug_ua_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/debug_ua_desktop"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/debug_ua_desktop"
+                android:textColor="#212121"
+                android:textSize="15sp" />
+
+            <RadioButton
+                android:id="@+id/debug_ua_mobile"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:text="@string/debug_ua_mobile"
+                android:textColor="#212121"
+                android:textSize="15sp" />
+
+        </RadioGroup>
+
+        <CheckBox
+            android:id="@+id/debug_ua_custom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            android:text="@string/debug_ua_custom"
+            android:textColor="#212121"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/debug_ua_input"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/debug_ua_input_hint"
+            android:importantForAutofill="no"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="#212121"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</ScrollView>

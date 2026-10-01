@@ -13,12 +13,16 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.CookieManager;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
@@ -31,8 +35,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.window.OnBackInvokedDispatcher;
@@ -48,17 +55,26 @@ public class MainActivity extends Activity {
     private static final String STATE_URL = "biliweb_state_url";
     private static final int REQ_FILE_CHOOSER = 1001;
     private static final int REQ_WEB_PERMISSION = 1002;
-    private static final String DESKTOP_USER_AGENT =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                    + "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
     private static final boolean PROGRESS_ONLY_FIRST_LOAD = false;
 
     private FrameLayout rootView;
+    private FrameLayout contentFrame;
     private FrameLayout container;
     private ProgressBar progressBar;
 
+    private View topBar;
+    private View topBarDivider;
+    private ImageButton navBack;
+    private ImageButton navForward;
+    private ImageButton navRefresh;
+    private ImageButton navTabs;
+    private TextView navTabsBadge;
+    private ImageButton navSettings;
+    private EditText navAddress;
+
     private final List<Page> pages = new ArrayList<Page>();
+    private int activeIndex = -1;
     private WebView webView;
     private VirtualMouseView mouseView;
     private View floatBall;
@@ -77,6 +93,9 @@ public class MainActivity extends Activity {
     }
     private boolean firstLoadFinished = false;
     private String appliedLanguage;
+    private String appliedUserAgent;
+    private boolean noMultiProcess;
+    private int appearance;
 
     @Override
     protected void attachBaseContext(Context newBase) {
@@ -86,18 +105,22 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        OrientationPrefs.applyTo(this);  
+        OrientationPrefs.applyTo(this);
         setContentView(R.layout.activity_main);
 
         rootView = (FrameLayout) findViewById(R.id.root);
+        contentFrame = (FrameLayout) findViewById(R.id.content_frame);
         container = (FrameLayout) findViewById(R.id.container);
         progressBar = (ProgressBar) findViewById(R.id.progress);
 
+        appearance = AppearancePrefs.get(this);
         appliedLanguage = AppLanguage.get(this);
         EdgeToEdge.apply(this, rootView);
         registerBackCallback();
+        setupTopBar();
         setupFloatBall();
         setupVirtualMouse();
+        applyAppearance();
 
         String startUrl = HOME_URL;
         if (savedInstanceState != null) {
@@ -106,7 +129,13 @@ public class MainActivity extends Activity {
                 startUrl = saved;
             }
         }
+        noMultiProcess = DebugPrefs.isNoMultiProcessWebView(this);
+        appliedUserAgent = UserAgentPrefs.resolveUserAgent(this);
         openNewPage(startUrl);
+
+        // 顶栏地址输入框不要一进来就抢焦点（否则会弹输入法）
+        rootView.setFocusableInTouchMode(true);
+        rootView.requestFocus();
     }
     private void loadUrl(WebView view, String url) {
         String acceptLanguage = AppLanguage.acceptLanguage(this);
@@ -121,18 +150,29 @@ public class MainActivity extends Activity {
     private void openNewPage(String url) {
         if (webView != null) {
             updateCurrentUrl();
-            pauseMedia(webView);      
-            webView.setVisibility(View.GONE);
-            webView.onPause();         
+            pauseMedia(webView);
+            if (noMultiProcess) {
+                // 不使用多进程 WebView：不保留上一页，返回时重新加载
+                if (activeIndex >= 0 && activeIndex < pages.size()) {
+                    pages.get(activeIndex).view = null;
+                }
+                removeAndDestroy(webView);
+            } else {
+                webView.setVisibility(View.GONE);
+                webView.onPause();
+            }
         }
         WebView view = createWebView();
         view.setVisibility(View.VISIBLE);
         container.addView(view);
         pages.add(new Page(url, view));
+        activeIndex = pages.size() - 1;
         webView = view;
         loadUrl(view, url);
         trimLiveViews();
         trimHistory();
+        updateToolbarState();
+        updateAddressBar();
     }
     private boolean popPage() {
         if (pages.size() <= 1) {
@@ -145,7 +185,12 @@ public class MainActivity extends Activity {
         }
 
         Page top = pages.get(pages.size() - 1);
-        if (top.view == null) {
+        if (top.view == null || noMultiProcess) {
+            // 不使用多进程 WebView：即使是缓存着的页面也重新加载
+            if (top.view != null) {
+                removeAndDestroy(top.view);
+                top.view = null;
+            }
             top.view = createWebView();
             container.addView(top.view);
             loadUrl(top.view, top.url);
@@ -153,7 +198,10 @@ public class MainActivity extends Activity {
         top.view.setVisibility(View.VISIBLE);
         top.view.onResume();
         webView = top.view;
+        activeIndex = pages.size() - 1;
         trimLiveViews();
+        updateToolbarState();
+        updateAddressBar();
         return true;
     }
 
@@ -167,12 +215,12 @@ public class MainActivity extends Activity {
         }
     }
     private void updateCurrentUrl() {
-        if (webView == null || pages.isEmpty()) {
+        if (webView == null || activeIndex < 0 || activeIndex >= pages.size()) {
             return;
         }
         String real = webView.getUrl();
         if (real != null && real.length() > 0) {
-            pages.get(pages.size() - 1).url = real;
+            pages.get(activeIndex).url = real;
         }
     }
     private void trimLiveViews() {
@@ -196,6 +244,9 @@ public class MainActivity extends Activity {
     private void trimHistory() {
         while (pages.size() > MAX_HISTORY) {
             Page oldest = pages.remove(0);
+            if (activeIndex > 0) {
+                activeIndex--;
+            }
             if (oldest.view != null) {
                 removeAndDestroy(oldest.view);
                 oldest.view = null;
@@ -219,7 +270,7 @@ public class MainActivity extends Activity {
         view.setLayoutParams(new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         WebSettings settings = view.getSettings();
-        settings.setUserAgentString(DESKTOP_USER_AGENT);
+        settings.setUserAgentString(UserAgentPrefs.resolveUserAgent(this));
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
@@ -238,6 +289,11 @@ public class MainActivity extends Activity {
         view.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
+                // 服务器重定向不算「新开一个页面」：否则页面栈里会塞进同一页的重定向地址，
+                // 返回时就会在原地打转（表现为「按返回=刷新」）
+                if (Build.VERSION.SDK_INT >= 24 && request.isRedirect()) {
+                    return false;
+                }
                 return handleNavigation(request.isForMainFrame(), request.getUrl().toString());
             }
 
@@ -250,11 +306,20 @@ public class MainActivity extends Activity {
             @Override
             public void onPageStarted(WebView v, String url, Bitmap favicon) {
                 PageZoom.apply(v, ZoomPrefs.get(MainActivity.this));
+                if (v == webView) {
+                    updateToolbarState();
+                    updateAddressBar();
+                }
             }
 
             @Override
             public void onPageFinished(WebView v, String url) {
                 PageZoom.apply(v, ZoomPrefs.get(MainActivity.this));
+                if (v == webView) {
+                    updateCurrentUrl();
+                    updateToolbarState();
+                    updateAddressBar();
+                }
             }
         });
 
@@ -358,6 +423,16 @@ public class MainActivity extends Activity {
             if (!isMainFrame) {
                 return false;
             }
+            if (appearance == AppearancePrefs.MODE_TOOLBAR) {
+                // 顶栏模式：导航留在当前标签页里，形成前进 / 后退历史
+                return false;
+            }
+            // 目标就是当前地址（例如脚本把自己重定向回自身）时不新开页面，
+            // 否则返回键会在同一个页面上反复「刷新」
+            String current = webView != null ? webView.getUrl() : null;
+            if (current != null && current.equals(url)) {
+                return false;
+            }
             openNewPage(url);
             return true;
         }
@@ -380,6 +455,279 @@ public class MainActivity extends Activity {
         }
         return host != null ? host : getString(R.string.app_name);
     }
+
+    // ==================== 外观 / 顶栏 ====================
+
+    private void setupTopBar() {
+        topBar = findViewById(R.id.main_top_bar);
+        topBarDivider = findViewById(R.id.main_top_bar_divider);
+        navBack = (ImageButton) findViewById(R.id.nav_back);
+        navForward = (ImageButton) findViewById(R.id.nav_forward);
+        navRefresh = (ImageButton) findViewById(R.id.nav_refresh);
+        navTabs = (ImageButton) findViewById(R.id.nav_tabs);
+        navTabsBadge = (TextView) findViewById(R.id.nav_tabs_badge);
+        navSettings = (ImageButton) findViewById(R.id.nav_settings);
+        navAddress = (EditText) findViewById(R.id.nav_address);
+
+        navBack.setOnClickListener(v -> {
+            if (webView != null && webView.canGoBack()) {
+                webView.goBack();
+            }
+        });
+        navForward.setOnClickListener(v -> {
+            if (webView != null && webView.canGoForward()) {
+                webView.goForward();
+            }
+        });
+        navRefresh.setOnClickListener(v -> {
+            if (webView != null) {
+                webView.reload();
+            }
+        });
+        navTabs.setOnClickListener(v -> showTabsDialog());
+        navSettings.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class)));
+        navSettings.setOnLongClickListener(v -> {
+            toggleVirtualMouse();
+            return true;
+        });
+        navAddress.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                navAddress.selectAll();
+            }
+        });
+        navAddress.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_GO
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                    || (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
+                navigateAddress();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void applyAppearance() {
+        boolean toolbar = appearance == AppearancePrefs.MODE_TOOLBAR;
+        if (topBar != null) {
+            topBar.setVisibility(toolbar ? View.VISIBLE : View.GONE);
+        }
+        if (topBarDivider != null) {
+            topBarDivider.setVisibility(toolbar ? View.VISIBLE : View.GONE);
+        }
+        if (floatBall != null) {
+            floatBall.setVisibility(toolbar ? View.GONE : View.VISIBLE);
+        }
+        updateToolbarState();
+        updateAddressBar();
+    }
+
+    private void updateToolbarState() {
+        if (appearance != AppearancePrefs.MODE_TOOLBAR) {
+            return;
+        }
+        boolean canBack = webView != null && webView.canGoBack();
+        boolean canForward = webView != null && webView.canGoForward();
+        if (navBack != null) {
+            navBack.setEnabled(canBack);
+            navBack.setAlpha(canBack ? 1f : 0.3f);
+        }
+        if (navForward != null) {
+            navForward.setEnabled(canForward);
+            navForward.setAlpha(canForward ? 1f : 0.3f);
+        }
+        if (navTabsBadge != null) {
+            int count = pages.size();
+            navTabsBadge.setVisibility(count > 1 ? View.VISIBLE : View.GONE);
+            navTabsBadge.setText(String.valueOf(count));
+        }
+    }
+
+    private void updateAddressBar() {
+        if (navAddress == null || appearance != AppearancePrefs.MODE_TOOLBAR) {
+            return;
+        }
+        if (navAddress.hasFocus()) {
+            return;
+        }
+        String url = webView != null ? webView.getUrl() : null;
+        if (url == null && activeIndex >= 0 && activeIndex < pages.size()) {
+            url = pages.get(activeIndex).url;
+        }
+        navAddress.setText(url == null ? "" : url);
+    }
+
+    private void navigateAddress() {
+        if (navAddress == null || webView == null) {
+            return;
+        }
+        String text = navAddress.getText().toString().trim();
+        if (text.length() == 0) {
+            return;
+        }
+        if (!text.contains("://")) {
+            text = "https://" + text;
+        }
+        navAddress.clearFocus();
+        hideKeyboard();
+        if (activeIndex >= 0 && activeIndex < pages.size()) {
+            pages.get(activeIndex).url = text;
+        }
+        loadUrl(webView, text);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm =
+                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null && navAddress != null) {
+            imm.hideSoftInputFromWindow(navAddress.getWindowToken(), 0);
+        }
+    }
+
+    private void switchTab(int index) {
+        if (index < 0 || index >= pages.size() || index == activeIndex) {
+            return;
+        }
+        updateCurrentUrl();
+        Page from = pages.get(activeIndex);
+        if (from.view != null) {
+            from.view.setVisibility(View.GONE);
+            from.view.onPause();
+        }
+        activeIndex = index;
+        Page to = pages.get(index);
+        if (to.view == null) {
+            to.view = createWebView();
+            container.addView(to.view);
+            loadUrl(to.view, to.url);
+        }
+        to.view.setVisibility(View.VISIBLE);
+        to.view.onResume();
+        webView = to.view;
+        trimLiveViews();
+        updateToolbarState();
+        updateAddressBar();
+    }
+
+    private void closeTab(int index) {
+        if (index < 0 || index >= pages.size()) {
+            return;
+        }
+        boolean wasActive = index == activeIndex;
+        Page removed = pages.remove(index);
+        if (removed.view != null) {
+            removeAndDestroy(removed.view);
+            removed.view = null;
+        }
+        if (pages.isEmpty()) {
+            webView = null;
+            activeIndex = -1;
+            openNewPage(HOME_URL);
+            return;
+        }
+        if (index < activeIndex) {
+            activeIndex--;
+        } else if (wasActive) {
+            activeIndex = Math.min(index, pages.size() - 1);
+            Page to = pages.get(activeIndex);
+            if (to.view == null) {
+                to.view = createWebView();
+                container.addView(to.view);
+                loadUrl(to.view, to.url);
+            }
+            to.view.setVisibility(View.VISIBLE);
+            to.view.onResume();
+            webView = to.view;
+        }
+        trimLiveViews();
+        updateToolbarState();
+        updateAddressBar();
+    }
+
+    private void showTabsDialog() {
+        updateCurrentUrl();
+
+        final LinearLayout list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(8);
+        list.setPadding(pad, pad, pad, pad);
+        for (int i = 0; i < pages.size(); i++) {
+            list.addView(buildTabRow(i));
+        }
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(list);
+
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.tabs_title)
+                .setView(scroll)
+                .setNeutralButton(R.string.tabs_new, null)
+                .setPositiveButton(R.string.about_close, null)
+                .create();
+
+        dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
+                dialog.dismiss();
+                openNewPage(HOME_URL);
+            });
+            for (int i = 0; i < list.getChildCount(); i++) {
+                final int index = i;
+                View row = list.getChildAt(i);
+                row.setOnClickListener(v -> {
+                    switchTab(index);
+                    dialog.dismiss();
+                });
+                if (row instanceof ViewGroup) {
+                    ViewGroup group = (ViewGroup) row;
+                    if (group.getChildCount() > 1) {
+                        group.getChildAt(1).setOnClickListener(v -> {
+                            dialog.dismiss();
+                            closeTab(index);
+                        });
+                    }
+                }
+            }
+        });
+        dialog.show();
+    }
+
+    private View buildTabRow(int index) {
+        Page page = pages.get(index);
+        String title = page.view != null ? page.view.getTitle() : null;
+        if (title == null || title.length() == 0) {
+            title = page.url;
+        }
+        if (title == null || title.length() == 0) {
+            title = getString(R.string.app_name);
+        }
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setMinimumHeight(dp(48));
+
+        TextView label = new TextView(this);
+        label.setText((index == activeIndex ? "● " : "○ ") + title);
+        label.setTextSize(15);
+        label.setTextColor(index == activeIndex ? 0xFFFB7299 : 0xFF212121);
+        label.setMaxLines(1);
+        label.setEllipsize(TextUtils.TruncateAt.END);
+        row.addView(label, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView close = new TextView(this);
+        close.setText("✕");
+        close.setTextSize(16);
+        close.setTextColor(0xFF888888);
+        close.setPadding(dp(12), dp(8), dp(8), dp(8));
+        row.addView(close);
+        return row;
+    }
+
+    private int dp(int value) {
+        return Math.round(getResources().getDisplayMetrics().density * value);
+    }
+
     private void handleWebPermission(PermissionRequest request) {
         List<String> runtimePerms = new ArrayList<String>();
         for (String res : request.getResources()) {
@@ -488,15 +836,47 @@ public class MainActivity extends Activity {
         return super.onKeyDown(keyCode, event);
     }
     private boolean handleBack() {
+        if (appearance == AppearancePrefs.MODE_TOOLBAR) {
+            // 顶栏模式：系统返回只走标签页内的历史，走到底就退出应用
+            if (webView != null && webView.canGoBack()) {
+                webView.goBack();
+                return true;
+            }
+            return false;
+        }
+        if (noMultiProcess) {
+            // 不使用多进程 WebView：全屏方案下「返回」优先回到页面栈里的上一个页面。
+            // 上一个页面的 WebView 已经被销毁，这里会重新创建并加载（即重新加载）。
+            // 之前是「先 goBack() 再 reload()」，遇到站内重定向/历史改写时会在原地打转，
+            // 看起来就像按返回只是刷新当前页，永远回不去。
+            if (popPage()) {
+                return true;
+            }
+            // 已经是最早的页面时，才退回网页自身的站内历史
+            if (webView != null && webView.canGoBack()) {
+                webView.goBack();
+                return true;
+            }
+            return false;
+        }
         if (webView != null && webView.canGoBack()) {
             webView.goBack();
             return true;
         }
         return popPage();
     }
+    private void destroyCachedViews() {
+        for (Page p : pages) {
+            if (p.view != null && p.view != webView) {
+                removeAndDestroy(p.view);
+                p.view = null;
+            }
+        }
+    }
     private void setupVirtualMouse() {
         mouseView = new VirtualMouseView(this, () -> webView);
-        rootView.addView(mouseView, 2, new FrameLayout.LayoutParams(
+        // 浮层只盖住网页区域：顶栏（如果有）和悬浮球都不受影响
+        contentFrame.addView(mouseView, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
         applyMouseMode();
     }
@@ -594,6 +974,15 @@ public class MainActivity extends Activity {
         updateFloatBallAppearance();
     }
     private void updateFloatBallAppearance() {
+        boolean mouseOn = MousePointerPrefs.isEnabled(this);
+
+        // 顶部导航栏模式：设置按钮的图标也跟着虚拟鼠标状态切换（黑指针 / 齿轮）
+        if (navSettings != null) {
+            navSettings.setImageResource(mouseOn
+                    ? R.drawable.ic_mouse_cursor
+                    : R.drawable.ic_settings);
+        }
+
         if (floatBall == null) {
             return;
         }
@@ -605,7 +994,6 @@ public class MainActivity extends Activity {
         if (ballIcon == null || ballBadge == null) {
             return;
         }
-        boolean mouseOn = MousePointerPrefs.isEnabled(this);
         ballIcon.setImageResource(mouseOn
                 ? R.drawable.ic_mouse_cursor_white
                 : R.drawable.ic_settings);
@@ -618,6 +1006,9 @@ public class MainActivity extends Activity {
 
         if (floatBall != null) {
             floatBall.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        }
+        if (navSettings != null && navSettings.getVisibility() == View.VISIBLE) {
+            navSettings.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
         }
         Toast.makeText(this,
                 enabled ? R.string.mouse_toggled_on : R.string.mouse_toggled_off,
@@ -640,7 +1031,31 @@ public class MainActivity extends Activity {
             recreate();
             return;
         }
+        if (AppearancePrefs.get(this) != appearance) {
+            // 外观切换：重建界面（网页会回到当前地址）
+            recreate();
+            return;
+        }
         OrientationPrefs.applyTo(this);
+        boolean noMultiProcessNow = DebugPrefs.isNoMultiProcessWebView(this);
+        if (noMultiProcessNow != noMultiProcess) {
+            noMultiProcess = noMultiProcessNow;
+            if (noMultiProcess) {
+                destroyCachedViews();
+            }
+        }
+        String userAgent = UserAgentPrefs.resolveUserAgent(this);
+        if (!userAgent.equals(appliedUserAgent)) {
+            appliedUserAgent = userAgent;
+            for (Page p : pages) {
+                if (p.view != null) {
+                    p.view.getSettings().setUserAgentString(userAgent);
+                }
+            }
+            if (webView != null) {
+                webView.reload();
+            }
+        }
         applyMouseMode();
         int zoom = ZoomPrefs.get(this);
         for (Page p : pages) {

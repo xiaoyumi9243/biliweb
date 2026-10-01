@@ -35,5 +35,10 @@
             android:exported="false"
             android:label="@string/settings_title"
             android:launchMode="singleTop" />
+        <activity
+            android:name=".WebViewCheckActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
+            android:exported="false"
+            android:label="@string/webview_test_title" />
     </application>
 </manifest>

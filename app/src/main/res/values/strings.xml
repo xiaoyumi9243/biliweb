@@ -90,4 +90,47 @@
     <string name="orientation_landscape">锁定横屏（禁止旋转）</string>
     <string name="orientation_default_short">默认</string>
     <string name="orientation_landscape_short">锁定横屏</string>
+
+    <!-- 调试 -->
+    <string name="settings_debug_title">调试</string>
+    <string name="debug_hint">以下为排查问题用的实验性选项，通常无需更改。</string>
+    <string name="debug_no_multiprocess_title">不使用多进程 WebView</string>
+    <string name="debug_no_multiprocess_hint">开启后，前进和后退都将会导致页面重新加载。</string>
+    <string name="debug_off_short">关闭</string>
+    <string name="debug_on_short">开启</string>
+    <string name="debug_webview_test">WebView 测试</string>
+    <string name="debug_webview_test_hint">打开一个本地测试页面，查看当前 WebView 的 User-Agent 与能力支持情况；该页面会应用你的自定义配置。</string>
+    <string name="debug_ua_title">自定义浏览器 UA</string>
+    <string name="debug_ua_hint">网页请求使用的 User-Agent。默认使用电脑 UA。自定义 UA 在保存前会做校验，非法内容会被拒绝并提示。</string>
+    <string name="debug_ua_desktop">电脑 UA（默认）</string>
+    <string name="debug_ua_mobile">手机 UA</string>
+    <string name="debug_ua_custom">自定义</string>
+    <string name="debug_ua_input_hint">输入自定义 UA</string>
+    <string name="debug_ua_desktop_short">电脑 UA</string>
+    <string name="debug_ua_mobile_short">手机 UA</string>
+    <string name="debug_ua_custom_short">自定义</string>
+    <string name="debug_ua_invalid">自定义 UA 无效：%1$s</string>
+    <string name="debug_ua_error_bad_chars">含有非法字符（只能使用可见 ASCII，不能有换行、制表符或中文）</string>
+    <string name="debug_ua_error_not_ua">看起来不是一个 User-Agent（至少要有“产品/版本”这样的片段，如 Mozilla/5.0）</string>
+    <string name="webview_test_title">WebView 测试</string>
+
+    <!-- 外观 -->
+    <string name="settings_appearance_title">外观</string>
+    <string name="appearance_hint">选择主界面的外观方案。</string>
+    <string name="appearance_fullscreen">全屏（默认）</string>
+    <string name="appearance_fullscreen_hint">只保留网页内容和悬浮球。</string>
+    <string name="appearance_toolbar">顶部导航栏</string>
+    <string name="appearance_toolbar_hint">顶部显示后退、前进、刷新、地址栏、标签页和设置按钮，不再显示悬浮球；长按顶栏的设置按钮可开关虚拟鼠标。</string>
+    <string name="appearance_fullscreen_short">全屏</string>
+    <string name="appearance_toolbar_short">顶部导航栏</string>
+
+    <!-- 顶部导航栏 -->
+    <string name="toolbar_back">后退</string>
+    <string name="toolbar_forward">前进</string>
+    <string name="toolbar_refresh">刷新</string>
+    <string name="toolbar_tabs">标签页</string>
+    <string name="toolbar_settings">设置</string>
+    <string name="toolbar_address_hint">输入网址</string>
+    <string name="tabs_title">标签页</string>
+    <string name="tabs_new">新建标签页</string>
 </resources>

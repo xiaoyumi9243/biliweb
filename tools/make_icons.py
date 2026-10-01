@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-python tools/make_icons.py
-
+python3 tools/make_icons.py
 """
 
 import math
@@ -14,7 +13,9 @@ PINK = (0xFB, 0x72, 0x99)
 WHITE = (0xFF, 0xFF, 0xFF)
 DARK = (0x21, 0x21, 0x21)
 BLACK = (0x1A, 0x1A, 0x1A)
+OUTLINE = (0x00, 0x00, 0x00)  # 齿轮描边用的浓黑
 
+# 启动图标：密度目录 -> 边长(px)
 LAUNCHER = {
     "mipmap-mdpi": 48,
     "mipmap-hdpi": 72,
@@ -23,6 +24,7 @@ LAUNCHER = {
     "mipmap-xxxhdpi": 192,
 }
 
+# 齿轮图标是 24dp，按密度换算成像素
 GEAR = {
     "drawable-mdpi": 24,
     "drawable-hdpi": 36,
@@ -31,8 +33,10 @@ GEAR = {
     "drawable-xxxhdpi": 96,
 }
 
+# 返回箭头也是 24dp
 ARROW = dict(GEAR)
 
+# 虚拟鼠标指针做得大一点，手指用起来看得清
 CURSOR = {
     "drawable-mdpi": 32,
     "drawable-hdpi": 48,
@@ -41,7 +45,8 @@ CURSOR = {
     "drawable-xxxhdpi": 128,
 }
 
-SS = 3
+SS = 3  # 超采样倍数，用于抗锯齿
+GEAR_OUTLINE = 0.035  # 齿轮黑色描边宽度（相对图标宽度，越大描边越粗）
 RES_DIR = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app", "src", "main", "res")
 )
@@ -66,6 +71,7 @@ def in_capsule(x, y, x0, y0, x1, y1, half):
 
 
 def render_launcher(size):
+    """粉色圆角底 + 白色电视机身 + 两根天线。"""
     w = size * SS
     buf = bytearray(w * w * 4)
 
@@ -98,6 +104,7 @@ def render_launcher(size):
             if in_round_rect(x + 0.5, y + 0.5, w * 0.26, w * 0.42, w * 0.74, w * 0.72, w * 0.06):
                 paint(x, y, PINK)
 
+    # 屏幕里写上 WEB（白色，和机身同色，看起来像从屏幕里镂出来）
     screen_left, screen_top = w * 0.26, w * 0.42
     screen_right, screen_bottom = w * 0.74, w * 0.72
     screen_w, screen_h = screen_right - screen_left, screen_bottom - screen_top
@@ -121,15 +128,22 @@ def render_launcher(size):
 
 
 def render_gear(size):
+    """白色齿轮：8 个齿 + 中心挖空（透明）。
+
+    外轮廓（齿顶 / 齿根 / 齿侧）和中心小圆环都描一圈浓黑边，
+    这样在粉色悬浮球和白色顶栏上都层次分明、边缘清晰。
+    """
     w = size * SS
-    buf = bytearray(w * w * 4)
     c = (w - 1) / 2.0
-    r_tip = w * 0.47
-    r_body = w * 0.34
-    r_hole = w * 0.13
+    r_tip = w * 0.47      # 齿顶半径
+    r_body = w * 0.34     # 齿根（圆盘）半径
+    r_hole = w * 0.13     # 中心孔半径
     teeth = 8
     period = 2.0 * math.pi / teeth
+    stroke = max(3, int(round(w * GEAR_OUTLINE)))   # 黑色描边宽度（超采样像素）
 
+    # 1) 先算出齿轮本体（不含描边）的实心区域
+    inside = bytearray(w * w)
     for y in range(w):
         for x in range(w):
             dx = x + 0.5 - c
@@ -139,19 +153,48 @@ def render_gear(size):
                 continue
             ang = math.atan2(dy, dx) + math.pi          # 0 .. 2pi
             frac = (ang % period) / period              # 0 .. 1
-            in_tooth = 0.30 <= frac < 0.70        
+            in_tooth = 0.30 <= frac < 0.70              # 中间 40% 是齿
             limit = r_tip if in_tooth else r_body
             if r <= limit:
-                i = (y * w + x) * 4
-                buf[i] = WHITE[0]
-                buf[i + 1] = WHITE[1]
-                buf[i + 2] = WHITE[2]
-                buf[i + 3] = 255
+                inside[y * w + x] = 1
+
+    # 2) 积分图：O(1) 判断每个像素周围 stroke 邻域内有没有「外部」像素。
+    #    有就说明它紧贴轮廓（齿顶、齿根、齿侧或中心孔），画成浓黑描边。
+    stride = w + 1
+    sat = [0] * (stride * stride)
+    for y in range(w):
+        base = (y + 1) * stride
+        prev = y * stride
+        row = y * w
+        for x in range(w):
+            outside = 0 if inside[row + x] else 1
+            sat[base + x + 1] = (outside + sat[base + x]
+                                 + sat[prev + x + 1] - sat[prev + x])
+
+    buf = bytearray(w * w * 4)
+    for y in range(w):
+        y0 = y - stroke if y - stroke > 0 else 0
+        y1 = y + stroke + 1 if y + stroke + 1 < w else w
+        row = y * w
+        for x in range(w):
+            if not inside[row + x]:
+                continue
+            x0 = x - stroke if x - stroke > 0 else 0
+            x1 = x + stroke + 1 if x + stroke + 1 < w else w
+            outside_count = (sat[y1 * stride + x1] - sat[y0 * stride + x1]
+                             - sat[y1 * stride + x0] + sat[y0 * stride + x0])
+            color = OUTLINE if outside_count > 0 else WHITE
+            i = (row + x) * 4
+            buf[i] = color[0]
+            buf[i + 1] = color[1]
+            buf[i + 2] = color[2]
+            buf[i + 3] = 255
 
     return downsample(buf, w, size)
 
 
 def render_back_arrow(size):
+    """深灰色返回箭头（"<" 形，由两段圆头线组成）"""
     w = size * SS
     buf = bytearray(w * w * 4)
     half = w * 0.055
@@ -168,14 +211,17 @@ def render_back_arrow(size):
     return downsample(buf, w, size)
 
 
+# 5x7 点阵字模（列优先，每列一个字节的低 7 位；经典的 5x7 字体数据）
 FONT_5X7 = {
     "W": (0x3F, 0x40, 0x38, 0x40, 0x3F),
     "E": (0x7F, 0x49, 0x49, 0x49, 0x41),
     "B": (0x7F, 0x49, 0x49, 0x49, 0x36),
 }
 
+# 屏幕上写什么字
 SCREEN_TEXT = "WEB"
 
+# 点阵字模占的列数（5 列字 + 1 列间距，最后一列不算）
 GLYPH_COLS = 5
 GLYPH_ROWS = 7
 GLYPH_GAP = 1
@@ -186,6 +232,7 @@ def text_columns(text):
 
 
 def text_pixel(text, col, row):
+    """点阵里第 col 列、第 row 行是否有点"""
     if col < 0 or row < 0 or row >= GLYPH_ROWS:
         return False
     index = col // (GLYPH_COLS + GLYPH_GAP)
@@ -201,6 +248,7 @@ def text_pixel(text, col, row):
 
 
 def in_polygon(x, y, pts):
+    """射线法：点是否在多边形内"""
     inside = False
     n = len(pts)
     j = n - 1
@@ -215,7 +263,9 @@ def in_polygon(x, y, pts):
 
 
 def render_cursor(size, fill=BLACK, outline=WHITE):
+    """经典鼠标箭头：黑多边形 + 白描边（描边用「到各边的距离」算），热点在左上角附近"""
     w = size * SS
+    # 设计尺度 15 x 25 的箭头形状
     design = [(0.0, 0.0), (0.0, 20.0), (5.0, 15.0), (10.0, 25.0),
               (14.0, 23.0), (9.0, 13.0), (15.0, 13.0)]
     scale = (w * 0.90) / 25.0
@@ -252,6 +302,7 @@ def render_cursor(size, fill=BLACK, outline=WHITE):
 
 
 def render_cursor_white(size):
+    """给悬浮球用的白色鼠标指针（球是粉底，白色更清楚）"""
     return render_cursor(size, WHITE, DARK)
 
 def downsample(buf, w, size):

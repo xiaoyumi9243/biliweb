@@ -1,2 +1,3 @@
+// biliweb - 项目设置
 rootProject.name = 'biliweb'
 include ':app'

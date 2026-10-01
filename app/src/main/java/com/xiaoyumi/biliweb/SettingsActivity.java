@@ -17,10 +17,12 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -42,6 +44,8 @@ public class SettingsActivity extends Activity {
     private static final int PANEL_FLOAT_BALL = 4;
     private static final int PANEL_ABOUT = 5;
     private static final int PANEL_LANGUAGE = 6;
+    private static final int PANEL_DEBUG = 7;
+    private static final int PANEL_APPEARANCE = 8;
     private boolean twoPane;
     private boolean detailShown;
     private String appliedLanguage;
@@ -55,12 +59,18 @@ public class SettingsActivity extends Activity {
     private TextView floatBallSummary;
     private TextView aboutSummary;
     private TextView languageSummary;
+    private TextView debugSummary;
+    private TextView appearanceSummary;
+    private EditText debugUaInput;
+    private boolean uaReverting;
     private View rowZoom;
     private View rowOrientation;
     private View rowMouse;
     private View rowFloatBall;
     private View rowAbout;
     private View rowLanguage;
+    private View rowDebug;
+    private View rowAppearance;
     private TextView aboutStatus;
     private Button aboutCheckButton;
     private WebView preview;
@@ -90,6 +100,8 @@ public class SettingsActivity extends Activity {
         floatBallSummary = (TextView) findViewById(R.id.float_ball_summary);
         aboutSummary = (TextView) findViewById(R.id.about_summary);
         languageSummary = (TextView) findViewById(R.id.language_summary);
+        debugSummary = (TextView) findViewById(R.id.debug_summary);
+        appearanceSummary = (TextView) findViewById(R.id.appearance_summary);
 
         rowZoom = findViewById(R.id.row_zoom);
         rowOrientation = findViewById(R.id.row_orientation);
@@ -97,6 +109,8 @@ public class SettingsActivity extends Activity {
         rowFloatBall = findViewById(R.id.row_float_ball);
         rowAbout = findViewById(R.id.row_about);
         rowLanguage = findViewById(R.id.row_language);
+        rowDebug = findViewById(R.id.row_debug);
+        rowAppearance = findViewById(R.id.row_appearance);
         findViewById(R.id.btn_back).setOnClickListener(v -> onBackArrow());
         rowZoom.setOnClickListener(v -> openPanel(PANEL_ZOOM));
         rowOrientation.setOnClickListener(v -> openPanel(PANEL_ORIENTATION));
@@ -104,6 +118,8 @@ public class SettingsActivity extends Activity {
         rowFloatBall.setOnClickListener(v -> openPanel(PANEL_FLOAT_BALL));
         rowAbout.setOnClickListener(v -> openPanel(PANEL_ABOUT));
         rowLanguage.setOnClickListener(v -> openPanel(PANEL_LANGUAGE));
+        rowDebug.setOnClickListener(v -> openPanel(PANEL_DEBUG));
+        rowAppearance.setOnClickListener(v -> openPanel(PANEL_APPEARANCE));
 
         registerBackCallback();
 
@@ -143,6 +159,10 @@ public class SettingsActivity extends Activity {
             content = createAboutPanel();
         } else if (panel == PANEL_LANGUAGE) {
             content = createLanguagePanel();
+        } else if (panel == PANEL_DEBUG) {
+            content = createDebugPanel();
+        } else if (panel == PANEL_APPEARANCE) {
+            content = createAppearancePanel();
         } else {
             content = createOrientationPanel();
         }
@@ -159,6 +179,10 @@ public class SettingsActivity extends Activity {
     }
 
     private void clearPanel() {
+        if (debugUaInput != null) {
+            commitUaInput();
+            debugUaInput = null;
+        }
         if (preview != null) {
             preview.destroy();
             preview = null;
@@ -185,6 +209,10 @@ public class SettingsActivity extends Activity {
             title.setText(R.string.settings_about_title);
         } else if (currentPanel == PANEL_LANGUAGE) {
             title.setText(R.string.settings_language_title);
+        } else if (currentPanel == PANEL_DEBUG) {
+            title.setText(R.string.settings_debug_title);
+        } else if (currentPanel == PANEL_APPEARANCE) {
+            title.setText(R.string.settings_appearance_title);
         } else {
             title.setText(R.string.settings_orientation_title);
         }
@@ -202,6 +230,8 @@ public class SettingsActivity extends Activity {
         applyRowBackground(rowFloatBall, twoPane && currentPanel == PANEL_FLOAT_BALL);
         applyRowBackground(rowAbout, twoPane && currentPanel == PANEL_ABOUT);
         applyRowBackground(rowLanguage, twoPane && currentPanel == PANEL_LANGUAGE);
+        applyRowBackground(rowDebug, twoPane && currentPanel == PANEL_DEBUG);
+        applyRowBackground(rowAppearance, twoPane && currentPanel == PANEL_APPEARANCE);
     }
 
     private void applyRowBackground(View row, boolean active) {
@@ -258,6 +288,32 @@ public class SettingsActivity extends Activity {
         if (languageSummary != null) {
             languageSummary.setText(AppLanguage.displayName(this));
         }
+        if (debugSummary != null) {
+            debugSummary.setText(uaSummaryRes());
+        }
+        if (appearanceSummary != null) {
+            appearanceSummary.setText(AppearancePrefs.get(this) == AppearancePrefs.MODE_TOOLBAR
+                    ? R.string.appearance_toolbar_short
+                    : R.string.appearance_fullscreen_short);
+        }
+    }
+    private View createAppearancePanel() {
+        View panel = getLayoutInflater().inflate(R.layout.panel_appearance, detailPane, false);
+        RadioButton fullscreen = (RadioButton) panel.findViewById(R.id.appearance_fullscreen);
+        RadioButton toolbar = (RadioButton) panel.findViewById(R.id.appearance_toolbar);
+        RadioGroup group = (RadioGroup) panel.findViewById(R.id.appearance_group);
+
+        final int mode = AppearancePrefs.get(this);
+        fullscreen.setChecked(mode == AppearancePrefs.MODE_FULLSCREEN);
+        toolbar.setChecked(mode == AppearancePrefs.MODE_TOOLBAR);
+
+        group.setOnCheckedChangeListener((checkedGroup, checkedId) -> {
+            AppearancePrefs.set(this, checkedId == R.id.appearance_toolbar
+                    ? AppearancePrefs.MODE_TOOLBAR
+                    : AppearancePrefs.MODE_FULLSCREEN);
+            updateSummaries();
+        });
+        return panel;
     }
     @SuppressLint("SetJavaScriptEnabled")
     private View createZoomPanel() {
@@ -501,6 +557,137 @@ public class SettingsActivity extends Activity {
         });
         return panel;
     }
+    private View createDebugPanel() {
+        View panel = getLayoutInflater().inflate(R.layout.panel_debug, detailPane, false);
+
+        CheckBox noMultiProcess = (CheckBox) panel.findViewById(R.id.debug_no_multiprocess);
+        noMultiProcess.setChecked(DebugPrefs.isNoMultiProcessWebView(this));
+        noMultiProcess.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            DebugPrefs.setNoMultiProcessWebView(this, isChecked);
+            updateSummaries();
+        });
+
+        panel.findViewById(R.id.debug_webview_test).setOnClickListener(v ->
+                startActivity(new Intent(SettingsActivity.this, WebViewCheckActivity.class)));
+
+        final RadioButton desktop = (RadioButton) panel.findViewById(R.id.debug_ua_desktop);
+        final RadioButton mobile = (RadioButton) panel.findViewById(R.id.debug_ua_mobile);
+        RadioGroup uaGroup = (RadioGroup) panel.findViewById(R.id.debug_ua_group);
+        int mode = UserAgentPrefs.getMode(this);
+        desktop.setChecked(mode != UserAgentPrefs.MODE_MOBILE);
+        mobile.setChecked(mode == UserAgentPrefs.MODE_MOBILE);
+        uaGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            UserAgentPrefs.setMode(this, checkedId == R.id.debug_ua_mobile
+                    ? UserAgentPrefs.MODE_MOBILE
+                    : UserAgentPrefs.MODE_DESKTOP);
+            updateSummaries();
+        });
+
+        final CheckBox custom = (CheckBox) panel.findViewById(R.id.debug_ua_custom);
+        final EditText input = (EditText) panel.findViewById(R.id.debug_ua_input);
+        debugUaInput = input;
+        boolean customOn = UserAgentPrefs.isCustomEnabled(this);
+        custom.setChecked(customOn);
+        input.setText(UserAgentPrefs.getCustomText(this));
+        input.setEnabled(customOn);
+        // 失焦 / 回车时才校验并保存：避免每敲一个字就写一次，也避免写到一半被当成最终值
+        input.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                commitUaInput();
+            }
+        });
+        input.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                commitUaInput();
+                return true;
+            }
+            return false;
+        });
+        custom.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (uaReverting) {
+                return;
+            }
+            if (isChecked) {
+                // 打开「自定义」之前先确认输入合法，否则拒绝打开，脏配置不入库
+                String text = input.getText().toString().trim();
+                int code = UserAgentPrefs.checkUserAgent(text);
+                if (text.length() > 0 && code != UserAgentPrefs.UA_OK) {
+                    purgeInvalidStoredUa();
+                    showUaError(code, input);
+                    uaReverting = true;
+                    custom.setChecked(false);
+                    uaReverting = false;
+                    return;
+                }
+                UserAgentPrefs.setCustomText(this, text);
+                UserAgentPrefs.setCustomEnabled(this, true);
+                input.setEnabled(true);
+            } else {
+                commitUaInput();
+                UserAgentPrefs.setCustomEnabled(this, false);
+                input.setEnabled(false);
+            }
+            updateSummaries();
+        });
+        return panel;
+    }
+
+    /** 校验并保存自定义 UA：不合法就不写入存储，并给出提示。 */
+    private void commitUaInput() {
+        if (debugUaInput == null) {
+            return;
+        }
+        String text = debugUaInput.getText().toString().trim();
+        if (text.length() == 0) {
+            debugUaInput.setError(null);
+            UserAgentPrefs.setCustomText(this, "");
+            updateSummaries();
+            return;
+        }
+        int code = UserAgentPrefs.checkUserAgent(text);
+        if (code == UserAgentPrefs.UA_OK) {
+            debugUaInput.setError(null);
+            UserAgentPrefs.setCustomText(this, text);
+            updateSummaries();
+        } else {
+            purgeInvalidStoredUa();
+            showUaError(code, debugUaInput);
+        }
+    }
+
+    /** 如果存储里已有的自定义 UA 本身就不合法，直接清掉，保证脏配置不残留。 */
+    private void purgeInvalidStoredUa() {
+        String stored = UserAgentPrefs.getCustomText(this);
+        if (stored.trim().length() > 0
+                && UserAgentPrefs.checkUserAgent(stored) != UserAgentPrefs.UA_OK) {
+            UserAgentPrefs.setCustomText(this, "");
+        }
+    }
+
+    private void showUaError(int code, EditText input) {
+        String reason;
+        if (code == UserAgentPrefs.UA_BAD_CHARS) {
+            reason = getString(R.string.debug_ua_error_bad_chars);
+        } else {
+            reason = getString(R.string.debug_ua_error_not_ua);
+        }
+        if (input != null) {
+            input.setError(reason);
+        }
+        Toast.makeText(this, getString(R.string.debug_ua_invalid, reason), Toast.LENGTH_LONG).show();
+    }
+
+    /** 设置列表里「调试」一行右侧显示的内容：当前生效的 UA 类型。 */
+    private int uaSummaryRes() {
+        if (UserAgentPrefs.isCustomEnabled(this)
+                && UserAgentPrefs.checkUserAgent(UserAgentPrefs.getCustomText(this))
+                        == UserAgentPrefs.UA_OK) {
+            return R.string.debug_ua_custom_short;
+        }
+        return UserAgentPrefs.getMode(this) == UserAgentPrefs.MODE_MOBILE
+                ? R.string.debug_ua_mobile_short
+                : R.string.debug_ua_desktop_short;
+    }
     private View createAboutPanel() {
         View panel = getLayoutInflater().inflate(R.layout.panel_about, detailPane, false);
         TextView version = (TextView) panel.findViewById(R.id.about_version);
@@ -644,6 +831,11 @@ public class SettingsActivity extends Activity {
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_PANEL, currentPanel);
+    }
+    @Override
+    protected void onPause() {
+        commitUaInput();
+        super.onPause();
     }
     @Override
     protected void onDestroy() {

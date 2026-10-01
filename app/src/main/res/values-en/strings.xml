@@ -90,4 +90,47 @@
     <string name="orientation_landscape">Locked landscape (rotation disabled)</string>
     <string name="orientation_default_short">Default</string>
     <string name="orientation_landscape_short">Locked landscape</string>
+
+    <!-- Debug -->
+    <string name="settings_debug_title">Debug</string>
+    <string name="debug_hint">Experimental options for troubleshooting; normally no change is needed.</string>
+    <string name="debug_no_multiprocess_title">Do not use multi-process WebView</string>
+    <string name="debug_no_multiprocess_hint">When enabled, going forward or back reloads the page.</string>
+    <string name="debug_off_short">Off</string>
+    <string name="debug_on_short">On</string>
+    <string name="debug_webview_test">WebView test</string>
+    <string name="debug_webview_test_hint">Opens a local test page that shows the current WebView User-Agent and feature support. Your custom settings are applied on that page.</string>
+    <string name="debug_ua_title">Custom browser User-Agent</string>
+    <string name="debug_ua_hint">The User-Agent used for web requests. Desktop UA by default. A custom UA is validated before it is saved; invalid input is rejected with a message.</string>
+    <string name="debug_ua_desktop">Desktop UA (default)</string>
+    <string name="debug_ua_mobile">Mobile UA</string>
+    <string name="debug_ua_custom">Custom</string>
+    <string name="debug_ua_input_hint">Enter a custom User-Agent</string>
+    <string name="debug_ua_desktop_short">Desktop UA</string>
+    <string name="debug_ua_mobile_short">Mobile UA</string>
+    <string name="debug_ua_custom_short">Custom</string>
+    <string name="debug_ua_invalid">Invalid custom UA: %1$s</string>
+    <string name="debug_ua_error_bad_chars">contains illegal characters (printable ASCII only; no line breaks, tabs or non-ASCII)</string>
+    <string name="debug_ua_error_not_ua">does not look like a User-Agent (needs a product/version token such as Mozilla/5.0)</string>
+    <string name="webview_test_title">WebView test</string>
+
+    <!-- Appearance -->
+    <string name="settings_appearance_title">Appearance</string>
+    <string name="appearance_hint">Choose how the main screen looks.</string>
+    <string name="appearance_fullscreen">Fullscreen (default)</string>
+    <string name="appearance_fullscreen_hint">Only the web content and the floating ball.</string>
+    <string name="appearance_toolbar">Top navigation bar</string>
+    <string name="appearance_toolbar_hint">The top bar shows back, forward, refresh, address bar, tabs and settings. The floating ball is hidden; long press the top-bar settings button to toggle the virtual mouse.</string>
+    <string name="appearance_fullscreen_short">Fullscreen</string>
+    <string name="appearance_toolbar_short">Top bar</string>
+
+    <!-- Top navigation bar -->
+    <string name="toolbar_back">Back</string>
+    <string name="toolbar_forward">Forward</string>
+    <string name="toolbar_refresh">Refresh</string>
+    <string name="toolbar_tabs">Tabs</string>
+    <string name="toolbar_settings">Settings</string>
+    <string name="toolbar_address_hint">Enter a URL</string>
+    <string name="tabs_title">Tabs</string>
+    <string name="tabs_new">New tab</string>
 </resources>
